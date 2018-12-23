@@ -1,23 +1,26 @@
 from django.db import models
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
-# Create your models here.
-class User(models.Model):
 
-    username = models.CharField(max_length=50,)
-    firstName = models.CharField(max_length=50)
-    lastName = models.CharField(max_length=100)
-    # change password to be secured/cryptoed
-    password = models.CharField(max_length=50)
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     age = models.IntegerField(default= 20)
-    longitude = models.DecimalField(max_digits=20, decimal_places=12)
-    latitude = models.DecimalField(max_digits=20, decimal_places=12)
+    longitude = models.DecimalField(max_digits=20, decimal_places=12,default=0)
+    latitude = models.DecimalField(max_digits=20, decimal_places=12, default=0)
     location_text = models.TextField(default="")
     aboutMe = models.TextField(default="")
 
-    def __str__(self):
-        return "%s %s %s %s %s %s %s" % (self.username , self.firstName, self.lastName ,
-                                         self.password ,self.longitude, self.latitude, self.location_text)
 
+@receiver(post_save, sender= User)
+def create_user_profile(sender,instance,created, **kwargs):
+     if created:
+         UserProfile.objects.create(user= instance)
+
+@receiver(post_save, sender= User)
+def save_user_profile(sender,instance,**kwargs):
+    instance.userprofile.save()
 
 
 class Instruments(models.Model):
